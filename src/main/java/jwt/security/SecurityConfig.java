@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.SecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.DefaultSecurityFilterChain;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -23,6 +24,11 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
   }
 
   @Bean
+  public BCryptPasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
+
+  @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http.csrf(cs -> cs.disable())
         .cors(co -> co.disable())
@@ -33,6 +39,7 @@ public class SecurityConfig extends SecurityConfigurerAdapter<DefaultSecurityFil
             .requestMatchers(HttpMethod.GET, "/info").authenticated()
             .requestMatchers(HttpMethod.POST,"/auth").permitAll()
             .requestMatchers(HttpMethod.POST,"/registration").permitAll())
+        .logout(l -> l.logoutSuccessUrl("/logout").permitAll())
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
     return http.build();

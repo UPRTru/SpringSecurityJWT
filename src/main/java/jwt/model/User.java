@@ -14,6 +14,9 @@ public class User {
   @Column(name = "id")
   private Long id;
 
+  @Column(name = "locked")
+  private int locked = 3; //количество неудачных попыток входа
+
   @Column(name = "name", unique = true)
   private String name;
 

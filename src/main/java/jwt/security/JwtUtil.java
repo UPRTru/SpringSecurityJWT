@@ -27,7 +27,6 @@ public class JwtUtil {
     Map<String, Object> claims = new HashMap<>();
     List<String> roles = userDetails.getAuthorities().stream()
         .map(GrantedAuthority::getAuthority).collect(Collectors.toList());
-    claims.put("password", userDetails.getPassword());
     claims.put("roles", roles);
     Date now = new Date();
     Date expiration = new Date(now.getTime() + lifetime.toMillis());
@@ -48,10 +47,6 @@ public class JwtUtil {
     return getAllClaimsFromToken(token).get("roles", List.class);
   }
 
-  public String getPasswordFromToken(String token) {
-    return getAllClaimsFromToken(token).get("password", String.class);
-  }
-
   public Claims getAllClaimsFromToken(String token) {
     return Jwts.parser().verifyWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
         .build()
@@ -61,12 +56,13 @@ public class JwtUtil {
 
   public boolean isTokenExpired(String token) {
     Date expiration = getAllClaimsFromToken(token).getExpiration();
-    return expiration.before(new Date());
+    return expiration.after(new Date());
   }
 
   public UserDetails getUserDetailsFromToken(String token) {
-    return new User(getUsernameFromToken(token), getPasswordFromToken(token),
-        getRolesFromToken(token).stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList()));
+    var roles = getRolesFromToken(token)
+        .stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+    return new User(getUsernameFromToken(token), "", roles);
   }
 }
 

@@ -1,20 +1,24 @@
 package jwt.security;
 
+import jwt.controller.Controller;
+import jwt.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationProvider implements AuthenticationProvider {
-  private UserDetailsService userDetailsService;
+  private UserService userDetailsService;
   private JwtUtil jwtUtil;
+  private static final Logger log = LoggerFactory.getLogger(Controller.class);
 
   @Override
   public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -24,9 +28,16 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
     try {
       String username = jwtUtil.getUsernameFromToken(token);
       UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-      return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
+      log.info("UsernamePasswordAuthentication User: {}", username);
+      try {
+        return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
+      } catch (Exception e) {
+        userDetailsService.lockedUser(username);
+        throw new BadCredentialsException(e.getMessage());
+      }
     } catch (Exception e) {
-      throw new BadCredentialsException("Invalid JWT Token");
+      log.info("JwtAuthenticationProvider authenticate() {}", e.getMessage());
+      throw new BadCredentialsException(e.getMessage());
     }
   }
 

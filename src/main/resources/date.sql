@@ -1,5 +1,6 @@
 create table users (
   id                    bigserial,
+  locked                int default 3, -- количество неудачных попыток входа
   name                  varchar(30) not null unique,
   password              varchar(80) not null,
   primary key (id)
@@ -25,8 +26,9 @@ values
 
 insert into users (name, password)
 values
-('user', 'user'),
-('admin', 'admin');
+('user', '$2a$10$4f3v1C83Jqb5BYd41Lo59etf/WFh34xLCF2lK.5U0YJjgfL29nmdO'),
+('admin', '$2a$10$4f3v1C83Jqb5BYd41Lo59etf/WFh34xLCF2lK.5U0YJjgfL29nmdO');
+-- password = password
 
 insert into users_roles (user_id, role_id)
 values
